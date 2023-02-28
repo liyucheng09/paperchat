@@ -2,7 +2,7 @@
 
 import './popup.css';
 
-(function () {
+
   // We will make use of Storage API to get and store `count` value
   // More information on Storage API can we found at
   // https://developer.chrome.com/extensions/storage
@@ -10,103 +10,163 @@ import './popup.css';
   // To get storage access, we have to mention it in `permissions` property of manifest.json file
   // More information on Permissions can we found at
   // https://developer.chrome.com/extensions/declare_permissions
-  const counterStorage = {
-    get: (cb) => {
-      chrome.storage.sync.get(['count'], (result) => {
-        cb(result.count);
-      });
-    },
-    set: (value, cb) => {
-      chrome.storage.sync.set(
-        {
-          count: value,
-        },
-        () => {
-          cb();
-        }
-      );
-    },
-  };
 
-  function setupCounter(initialValue = 0) {
-    document.getElementById('counter').innerHTML = initialValue;
+document.addEventListener('DOMContentLoaded', () => {
+  chrome.runtime.sendMessage({'type': 'DOM_LOADED'});
+});
 
-    document.getElementById('incrementBtn').addEventListener('click', () => {
-      updateCounter({
-        type: 'INCREMENT',
-      });
-    });
+document.getElementById('loginclose').addEventListener('click', () => {
+  chrome.tabs.create({ url: "https://chat.openai.com/auth/login" });
+});
 
-    document.getElementById('decrementBtn').addEventListener('click', () => {
-      updateCounter({
-        type: 'DECREMENT',
-      });
-    });
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === 'ChatResponse') {
+    updateChatlog(request);
   }
 
-  function updateCounter({ type }) {
-    counterStorage.get((count) => {
-      let newCount;
-
-      if (type === 'INCREMENT') {
-        newCount = count + 1;
-      } else if (type === 'DECREMENT') {
-        newCount = count - 1;
-      } else {
-        newCount = count;
-      }
-
-      counterStorage.set(newCount, () => {
-        document.getElementById('counter').innerHTML = newCount;
-
-        // Communicate with content script of
-        // active tab by sending a message
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          const tab = tabs[0];
-
-          chrome.tabs.sendMessage(
-            tab.id,
-            {
-              type: 'COUNT',
-              payload: {
-                count: newCount,
-              },
-            },
-            (response) => {
-              console.log('Current count value passed to contentScript file');
-            }
-          );
-        });
-      });
-    });
+  if (request.type === 'initChatlog') {
+    // request.response.forEach((message) => {
+    //   updateChatlog(message.message, message.sender); 
+    // });
+    document.getElementById('chatgpt').src = 'https://chat.openai.com/chat/' + request.conversationId;
   }
 
-  function restoreCounter() {
-    // Restore count value
-    counterStorage.get((count) => {
-      if (typeof count === 'undefined') {
-        // Set counter value as 0
-        counterStorage.set(0, () => {
-          setupCounter(0);
-        });
-      } else {
-        setupCounter(count);
-      }
-    });
+  if (request.type === 'notLoggedIn') {
+    // alert("Please got to ChatGPT and log in first, then try again! ");
+    document.getElementById('popup-container').style.display = 'block';
   }
+});
 
-  document.addEventListener('DOMContentLoaded', restoreCounter);
+// function updateChatlog ({message, sender_}) {
+//   const chatbox = document.getElementById("chatbox");
 
-  // Communicate with background file by sending a message
-  chrome.runtime.sendMessage(
-    {
-      type: 'GREETINGS',
-      payload: {
-        message: 'Hello, my name is Pop. I am from Popup.',
-      },
-    },
-    (response) => {
-      console.log(response.message);
-    }
-  );
-})();
+//   const newMessage = document.createElement("div");
+//   newMessage.classList.add("message");
+
+//   const sender = document.createElement("span");
+//   sender.classList.add("sender");
+//   sender.textContent = sender_ + ":";
+
+//   const content = document.createElement("span");
+//   content.classList.add("content");
+//   content.textContent = message;
+
+//   newMessage.appendChild(sender);
+//   newMessage.appendChild(content);
+//   chatbox.appendChild(newMessage);
+// }
+
+// document.getElementById("send").addEventListener("click", function () {
+//   let query = document.getElementById('message').value;
+
+//   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+//     const tab = tabs[0];
+//     chrome.tabs.sendMessage(
+//       tab.id,
+//       {'type': 'QUERY', 'query': query}
+//     );
+//   });
+//   updateChatlog({message: query, sender: "You"});
+// });
+
+
+
+  // const counterStorage = {
+  //   get: (cb) => {
+  //     chrome.storage.sync.get(['count'], (result) => {
+  //       cb(result.count);
+  //     });
+  //   },
+  //   set: (value, cb) => {
+  //     chrome.storage.sync.set(
+  //       {
+  //         count: value,
+  //       },
+  //       () => {
+  //         cb();
+  //       }
+  //     );
+  //   },
+  // };
+
+  // function setupCounter(initialValue = 0) {
+  //   document.getElementById('counter').innerHTML = initialValue;
+
+  //   document.getElementById('incrementBtn').addEventListener('click', () => {
+  //     updateCounter({
+  //       type: 'INCREMENT',
+  //     });
+  //   });
+
+  //   document.getElementById('decrementBtn').addEventListener('click', () => {
+  //     updateCounter({
+  //       type: 'DECREMENT',
+  //     });
+  //   });
+  // }
+
+  // function updateCounter({ type }) {
+  //   counterStorage.get((count) => {
+  //     let newCount;
+
+  //     if (type === 'INCREMENT') {
+  //       newCount = count + 1;
+  //     } else if (type === 'DECREMENT') {
+  //       newCount = count - 1;
+  //     } else {
+  //       newCount = count;
+  //     }
+
+  //     counterStorage.set(newCount, () => {
+  //       document.getElementById('counter').innerHTML = newCount;
+
+  //       // Communicate with content script of
+  //       // active tab by sending a message
+  //       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+  //         const tab = tabs[0];
+
+  //         chrome.tabs.sendMessage(
+  //           tab.id,
+  //           {
+  //             type: 'COUNT',
+  //             payload: {
+  //               count: newCount,
+  //             },
+  //           },
+  //           (response) => {
+  //             console.log('Current count value passed to contentScript file');
+  //           }
+  //         );
+  //       });
+  //     });
+  //   });
+  // }
+
+  // function restoreCounter() {
+  //   // Restore count value
+  //   counterStorage.get((count) => {
+  //     if (typeof count === 'undefined') {
+  //       // Set counter value as 0
+  //       counterStorage.set(0, () => {
+  //         setupCounter(0);
+  //       });
+  //     } else {
+  //       setupCounter(count);
+  //     }
+  //   });
+  // }
+
+  // document.addEventListener('DOMContentLoaded', restoreCounter);
+
+  // // Communicate with background file by sending a message
+  // chrome.runtime.sendMessage(
+  //   {
+  //     type: 'GREETINGS',
+  //     payload: {
+  //       message: 'Hello, my name is Pop. I am from Popup.',
+  //     },
+  //   },
+  //   (response) => {
+  //     console.log(response.message);
+  //   }
+  // );

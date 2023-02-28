@@ -15,8 +15,15 @@ html {
 }
 
 body {
-  width: 350px;
-  height: 300px;
+  width: 600px;
+  height: 560px;
+}
+
+.message {
+  background-color: #f2f2f2;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
 }
 
 .app {
@@ -27,6 +34,19 @@ body {
   flex-direction: column;
   text-align: center;
   padding: 20px;
+}
+
+#chatbox {
+  border: 1px solid #ccc;
+  height: 400px;
+  width: 96%;
+  overflow-y: scroll;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  margin: auto; /* center the chatbox horizontally */;
+  margin-bottom: 10px;
+  margin-top: 10px;
 }
 
 .title {
@@ -58,13 +78,30 @@ code {
 }
 
 .button-container {
-  margin-top: 15px;
+  width: 99%;
+  display: block;
+  margin: auto;
 }
 
-.button {
+.sender {
+  font-weight: bold;
+  color: rgb(0, 174, 255);
+}
+
+textarea {
+  display: block;
+  width: 96%;
+  height: 75px;
+  margin-bottom: 10px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: auto;
+}
+
+button {
   border: 0;
   display: inline-block;
-  padding: 10px 20px;
+  padding: 10px 10px;
   margin-right: 4px;
   margin-left: 4px;
   background-color: bisque;
@@ -76,11 +113,11 @@ code {
   user-select: none;
 }
 
-.button:focus {
+button:focus {
   outline: none;
 }
 
-.button:hover {
+button:hover {
   transform: scale(1.1);
 }
 
@@ -89,4 +126,49 @@ code {
   width: 50px;
   border: 0.5px dashed #000;
   opacity: 0.1;
+}
+
+#LogInAlert {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  max-width: 100px;
+  z-index: 999;
+  display: none; /* Hide the popup by default */
+  border: 1px solid #ccc;
+}
+
+#popup-container img {
+  width: 50px;
+  height: 50px;
+  margin-bottom: 10px;
+}
+
+#popup-container h2 {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+#popup-container p {
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+#popup-container button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#popup-container button:hover {
+  background-color: #0069d9;
 }

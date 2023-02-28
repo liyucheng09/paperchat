@@ -1,13 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "Paperchat",
+  "name": "ChatGPT PopUp",
   "version": "0.1.0",
-  "description": "My Chrome Extension",
+  "description": "Access ChatGPT as a popup on anypages. Save your chat history and seamlessly continue your conversations.",
   "icons": {
-    "16": "icons/icon_16.png",
-    "32": "icons/icon_32.png",
-    "48": "icons/icon_48.png",
-    "128": "icons/icon_128.png"
+    "16": "icons/plane.png",
+    "32": "icons/plane.png",
+    "48": "icons/plane.png",
+    "128": "icons/plane.png"
   },
   "background": {
     "service_worker": "background.js"
@@ -17,17 +17,9 @@
     "default_popup": "popup.html"
   },
   "permissions": [
-    "storage"
+    "storage", "tabs"
   ],
-  "content_scripts": [
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "run_at": "document_idle",
-      "js": [
-        "contentScript.js"
-      ]
-    }
+  "host_permissions": [
+    "https://*.openai.com/*", "https://chat.duti.tech/api/*"
   ]
 }

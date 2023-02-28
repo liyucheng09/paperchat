@@ -1,0 +1,134 @@
+'use strict';
+
+// With background scripts you can communicate with popup
+// and contentScript files.
+// For more information on background script,
+// See https://developer.chrome.com/extensions/background_pages
+
+import { ChatGPTUnofficialProxyAPI } from 'chatgpt'
+
+async function obtainAccessKey() {
+  let acessKey;
+  console.log("obtaining access key");
+
+  let response = await fetch("https://chat.openai.com/api/auth/session");
+  let authJson = await response.json();
+
+  if (authJson.accessToken == null) {
+      alert("Please got to ChatGPT and log in first, then try again! ");
+      return;
+  } else {
+      acessKey = authJson.accessToken;
+      console.log("access key obtained", acessKey);
+      return acessKey;
+  }
+}
+
+const storageConversation = {
+  get: (key, cb) => {
+    chrome.storage.local.get([key], (result) => {
+      cb(result.key);
+    });  
+  },
+  set: (key, value, cb) => {
+    chrome.storage.local.set({[key]: value}, () => {
+      cb();
+    });
+  }
+}
+
+let chatAPI;
+
+// chrome.action.onClicked.addListener( async (tab) => {
+
+//   let accessKey = await obtainAccessKey();
+//   chatAPI = new ChatGPTUnofficialProxyAPI({
+//       accessToken: accessKey,
+//   });
+//   console.log("accessKey", accessKey);
+
+// });
+
+async function getParagraphs() {
+  let queryOptions = { active: true, currentWindow: true };
+  let [tab] = await chrome.tabs.query(queryOptions);
+
+  console.log("TAB", tab);
+
+  let url = new URL(tab.url);
+  let isPDF = url.pathname.endsWith(".pdf");
+  let host = url.host;
+  let path = url.pathname;
+
+  let paragraphToSummarize;
+
+  if (isPDF) {
+    paragraphToSummarize = 'Summarise the following paper: ' + document.body.innerText;
+  } else {
+    chrome.scripting.executeScript({
+        target: {tabId: tab.id},
+        func: async function () {
+            paragraphToSummarize = 'Summarise the following article: ' + document.body.innerText;
+            console.log('paragraphToSumm', paragraphToSummarize);
+        },
+        // code: "console.log(document)",
+    });
+  }
+
+  return paragraphToSummarize, host + path;
+}
+
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+  if (request.type === 'DOM_LOADED') {
+    let accessKey = await obtainAccessKey();
+    chatAPI = new ChatGPTUnofficialProxyAPI({
+        accessToken: accessKey,
+    });
+    console.log("accessKey obtained", accessKey);
+    console.log("chatAPI", chatAPI);
+  }
+
+  if (request.type === 'SUMMARISE') {
+    
+    let paragraphToSummarize, hostPath = await getParagraphs();
+
+    console.log("Tab URL", hostPath);
+    
+    storageConversation.get(hostPath, async (results) => {
+      if (results === null) {
+
+        console.log("No conversation found, starting new one", chatAPI);
+
+        const res = await chatAPI.sendMessage(paragraphToSummarize);
+        console.log("response", res);
+        let conversationId = res.conversationId;
+        let parentMessageId = res.parentMessageId;
+        let historyLog = [];
+        historyLog.push({message: parentMessageId, sender: 'User'});
+        historyLog.push({message: res.text, sender: 'ChatGPT'});
+
+        console.log("response", res.text);
+
+        storageConversation.set(hostPath, { conversationId: conversationId, parentMessageId: parentMessageId, historyLog: historyLog}, () => {
+          sendResponse({message: res.text, sender: 'ChatGPT'});
+        });
+      } else {
+        console.log("Conversation found, continuing", results);
+
+        let conversationId = results.conversationId;
+        let parentMessageId = results.parentMessageId;
+
+        const res = await chatAPI.sendMessage(paragraphToSummarize, 
+          {
+            conversationId: conversationId,
+            parentMessageId: parentMessageId,
+          }
+        );
+        storageConversation.set(host + path, { conversationId: conversationId, parentMessageId: parentMessageId, historyLog: historyLog}, () => {
+          sendResponse({message: res.text, sender: 'ChatGPT'});
+        });
+      }
+    });
+    return true;
+  }
+});
