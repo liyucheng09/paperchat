@@ -12,7 +12,9 @@ async function obtainAccessKey() {
   console.log("obtaining access key");
 
   let response = await fetch("https://chat.openai.com/api/auth/session");
-  let authJson = await response.json();
+  let authJson = await response.json().catch((err) => {
+      chrome.runtime.sendMessage({type: 'notLoggedIn'});
+  });
 
   if (authJson.accessToken == null) {
       chrome.runtime.sendMessage({type: 'notLoggedIn'});
@@ -26,6 +28,7 @@ async function obtainAccessKey() {
 }
 
 let chatAPI;
+let chatAPI_backup;
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   if (request.type === 'DOM_LOADED') {
@@ -35,6 +38,13 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     chatAPI = new ChatGPTUnofficialProxyAPI({
         accessToken: accessKey,
+        apiReverseProxyUrl: 'https://chat.openai.com/backend-api/conversation',
+        model: 'gpt-4'
+    });
+    chatAPI_backup = new ChatGPTUnofficialProxyAPI({
+        accessToken: accessKey,
+        apiReverseProxyUrl: 'https://chat.openai.com/backend-api/conversation',
+        model: 'text-davinci-002-render-sha'
     });
     let queryOptions = { active: true, currentWindow: true };
     let [tab] = await chrome.tabs.query(queryOptions)
@@ -45,27 +55,36 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       let conversationId;
       if (!Object.keys(results).length) {
         console.log("no results");
-        let res = await chatAPI.sendMessage('Hi!');
+        let res;
+        try {
+          res = await chatAPI.sendMessage('Hi!');
+        } catch (err) {
+          console.log("error", err);
+          res = await chatAPI_backup.sendMessage('Hi!');
+        }
         conversationId = res.conversationId;
         chrome.storage.sync.set({[hostPath]: conversationId});
+
+        // let parentMessageId = res.parentMessageId;
       } else {
         console.log("results", results);
         conversationId = results[hostPath];
-        try {
-          let res = await chatAPI.sendMessage('Hi!', 
-            { conversationId: conversationId });
-        }
-        catch (err) {
-          console.log("error", err);
-          if (err.message === 'badConversationId') {
-            let res = await chatAPI.sendMessage('Hi!');
-            conversationId = res.conversationId;
-            chrome.storage.sync.set({[hostPath]: conversationId});
-          }
+        let res = await chatAPI.getConversationId();
+        let conversations = res.map((conversation) => conversation.id);
+        console.log("conversations res", res);
+        if (!conversations.includes(conversationId)) {
+          console.log("conversationId not found, starting new one");
+          let res = await chatAPI.sendMessage('Hi!');
+          conversationId = res.conversationId;
+          chrome.storage.sync.set({[hostPath]: conversationId});
         }
       }
       console.log("conversationId", conversationId);
       chrome.runtime.sendMessage({type: 'initChatlog', conversationId: conversationId});
+      let title = await chatAPI.genTitle(
+        conversationId
+      );
+      console.log("title", title);
     });
   }
 

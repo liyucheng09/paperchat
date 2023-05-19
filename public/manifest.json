@@ -20,6 +20,22 @@
     "storage", "tabs"
   ],
   "host_permissions": [
-    "https://*.openai.com/*", "https://chat.duti.tech/api/*"
-  ]
+    "https://*.openai.com/*", "https://chat.duti.tech/api/*", "file://*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "run_at": "document_idle",
+      "js": [
+        "contentScript.js",
+        "pdf.worker.js"
+      ]
+    }
+  ],
+  "web_accessible_resources": [{
+    "resources": ["pdf.worker.js"],
+    "matches": ["<all_urls>"]
+  }]
 }

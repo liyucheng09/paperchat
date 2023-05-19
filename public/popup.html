@@ -9,7 +9,7 @@
         margin: 0;
         padding: 0;
         height: 600px;
-        width: 550px;
+        width: 720px;
       }
       iframe {
         border: none;
@@ -63,6 +63,192 @@
       #popup-container button:hover {
         background-color: #0069d9;
       }
+      
+      #two-col-container {
+        display: grid;
+        grid-template-columns: 2fr 5fr; /* set the width of the two columns */
+        height: 100%;
+        width: 100%;
+      }
+
+      #sidebar {
+        background-color: #f0f0f0;
+      }
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      /* normalize css ends here */
+
+      html {
+        font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial,
+          sans-serif;
+        color: #222;
+      }
+
+      textarea {
+        display: none;
+        width: 100%;
+        height: 80px;
+        margin-bottom: 10px;
+        margin-top: 10px;
+      }
+
+      #selectPage {
+        display: none;
+        /* position: fixed; */
+        /* background-color: #fff; */
+        /* border: 1px solid #ccc; */
+        /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); */
+        /* padding: 20px; */
+        /* max-width: 500px; */
+        /* z-index: 9999; */
+        flex-direction: column;
+        align-items: center; 
+      }
+
+      #selectPage > label {
+        /* margin-bottom: 20px; */
+        font-weight: 600;
+      }
+
+      #selectPage > .divider {
+        margin: 15px auto 15px;
+      }
+
+      #selectPage > div {
+        display: flex; /* add this to make the select and button elements side-by-side */
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%; /* add this to make the div take up the full width of the container */
+      }
+
+      #selectPage > select {
+        width: 70%; /* adjust this as necessary to set the width of the select element */
+      }
+
+      #selectPage > button {
+        width: 25%; /* adjust this as necessary to set the width of the button element */
+      }
+
+      .app {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+
+      .subtitle {
+        font-size: 16px;
+        display: none;
+        font-style: italic;
+      }
+
+      code {
+        font-size: 12px;
+        font-family: inherit;
+        background-color: rgba(254, 237, 185, 0.3);
+        padding: 2px 4px;
+        border-radius: 2px;
+      }
+
+      .counter-label {
+        display: none;
+        font-size: 12px;
+        margin-bottom: 5px;
+      }
+
+      .counter {
+        font-size: 36px;
+        font-weight: 700;
+      }
+
+      .button-container {
+        margin-top: 15px;
+      }
+
+      .button {
+        border: 0;
+        display: inline-block;
+        padding: 10px 20px;
+        margin-right: 4px;
+        margin-left: 4px;
+        background-color: bisque;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 4px;
+        text-decoration: none;
+        transition: transform 0.2s ease;
+        user-select: none;
+      }
+
+      .button:focus {
+        outline: none;
+      }
+
+      .button:hover {
+        transform: scale(1.1);
+      }
+
+      .divider {
+        margin: 30px auto 25px;
+        width: 50px;
+        border: 0.5px dashed #000;
+        opacity: 0.1;
+      }
+
+      #checkbox {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+      }
+
+      /* .file-label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        font-size: 0.7rem;
+        font-weight: 400;
+        line-height: 1;
+        padding: 0.175rem 0.55rem;
+        margin-bottom: 0;
+        margin-top: 0;
+        color: #495057;
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+      }
+
+      .file-label:hover {
+        border-color: #6c757d;
+      }
+
+      .file-label:focus-within {
+        box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+      }
+
+      .file-icon {
+        margin-right: 0.5rem;
+        font-size: 1.5rem;
+      }
+
+      .file-input {
+        display: none;
+      } */
     </style>
   </head>
   <body>
@@ -72,7 +258,46 @@
       <p>Please go to ChatGPT log in first, then try again!</p>
       <button id="loginclose">Jump to ChatGPT</button>
     </div>
-    <iframe src="" width="100%" height="100%" frameborder="0" allowtransparency="true" allow="microphone; camera" id="chatgpt"></iframe>
+    <div id="two-col-container" >
+      <div id="sidebar">
+        <div class="app">
+          <p class="subtitle" id="ContentTitle"></p>
+          <textarea id="text"></textarea>
+          <div id="selectPage">
+            <label for="selector">Press Ctrl/Command to multi-select.</label>
+            <hr class="divider"/>
+            <div style="flex-direction: row; justify-content: space-between; align-items: center;">
+              <select id="selector" class="select" title="Press Ctrl/Command to select multiple pages." multiple></select>
+              <button class="button" id="PageSelected">OK</button>
+            </div>
+          </div>
+          <div class="button-container">
+            <!-- <button id="parseWeb" class="button">Parse Web Page</button> -->
+            <button id="parse" class="button">Parse!</button>
+          </div>
+    
+          <hr class="divider" id = "divider"/>
+    
+          <p class="title">Press to parse <span style="text-decoration: underline;">Web Pages</span> or <span style="text-decoration: underline;">PDF</span>!</p>
+          <!-- <p class="subtitle">copied to clipboard!</p> -->
+          <!-- <p class="title">Or</p> -->
+          <!-- <form>
+            <label for="file-upload" class="file-label">
+              <span class="file-icon">&#128206;</span>
+              <span class="file-name">Choose a file...</span>
+            </label>
+            <input id="file-upload" type="file" class="file-input">
+          </form> -->
+        </div>
+        <div id="checkbox">
+          <input type="checkbox" id="vehicle1" name="vehicle1" value="Bike" checked>
+          <label for="vehicle1" style="font-size: 16px; font-weight: 400; margin-left: 6px;">Add Prompt</label>
+        </div>
+      </div>
+      <div id="main-content">
+        <iframe src="" width="100%" height="100%" frameborder="0" allowtransparency="true" allow="microphone; camera" id="chatgpt"></iframe>
+      </div>
+    </div>
     <!-- <div class="app">
       <p class="counter-label">Counter</p>
       <div id="counter" class="counter"></div>
